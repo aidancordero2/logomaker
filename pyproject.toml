@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "logomaker_acordero"
-version = "0.4.5"
+version = "0.4.6"
 description = "Package for making Sequence Logos"
 readme = "README.md"
 requires-python = ">=3.8"
