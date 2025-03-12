@@ -120,6 +120,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: python-package-distributions-*
+        merge-multiple: true
         path: dist/
     - name: Publish distribution 📦 to TestPyPI
       if: github.ref_type == 'tag' && startsWith(github.ref_name, 'test')
