@@ -1,6 +1,7 @@
 name: Publish logomaker to TestPyPI
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0/30 * * * *'
   push:
@@ -39,7 +40,8 @@ jobs:
 
     - name: Run tests
       run: |
-        python -c "pip install -i https://test.pypi.org/simple/logomaker-acordero; logomaker-acordero.run_tests()"
+        pip install -i https://test.pypi.org/simple/ logomaker-acordero
+        python -c "import logomaker; logomaker.run_tests()"
 
   create-release:
     # This will create a release on GitHub, automatically triggering a build on ReadTheDocs via a webhook
