@@ -1,7 +1,10 @@
 name: Publish logomaker to TestPyPI
 
-on: push
-
+on:
+  push:
+    tags:
+      - 'test*'  # test tags for TestPyPI
+      
 jobs:
   build:
     name: Build distribution
