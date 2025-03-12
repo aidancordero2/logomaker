@@ -2,9 +2,9 @@ name: Publish logomaker to TestPyPI
 
 on:
   schedule:
-    - cron: '38,45,55 * * * *'
+    - cron: '40 * * * *'
   push:
-    branches: [ main ]
+    branches: [ master ]
             
       
 jobs:
