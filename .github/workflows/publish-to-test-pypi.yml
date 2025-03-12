@@ -3,7 +3,7 @@ name: Publish logomaker to TestPyPI
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0/30 * * * *'
+    - cron: '0 0 * * *'
   push:
     tags:
       - 'v*'  # version tags for PyPI
