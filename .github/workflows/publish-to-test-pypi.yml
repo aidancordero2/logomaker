@@ -41,7 +41,7 @@ jobs:
     - name: Run tests
       run: |
         pip install -i https://test.pypi.org/simple/ logomaker-acordero
-        python -c "import logomaker_acordero; logomaker.run_tests()"
+        python -c "from logomaker_acordero import logomaker; logomaker.run_tests()"
 
   create-release:
     # This will create a release on GitHub, automatically triggering a build on ReadTheDocs via a webhook
