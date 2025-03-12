@@ -41,7 +41,7 @@ jobs:
     - name: Run tests
       run: |
         pip install -i https://test.pypi.org/simple/ logomaker-acordero
-        python -c "import logomaker; logomaker.run_tests()"
+        python -c "import logomaker_acordero; logomaker.run_tests()"
 
   create-release:
     # This will create a release on GitHub, automatically triggering a build on ReadTheDocs via a webhook
@@ -99,7 +99,7 @@ jobs:
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
-        name: python-package-distributions
+        name: python-package-distributions-${{ matrix.python-version }}
         path: dist/
         
   publish-to-testpypi:
@@ -119,6 +119,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
+        pattern: python-package-distributions-*
         name: python-package-distributions
         path: dist/
     - name: Publish distribution 📦 to TestPyPI
