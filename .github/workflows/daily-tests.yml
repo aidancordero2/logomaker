@@ -1,4 +1,4 @@
-name: Daily Tests - ${{ github.event.schedule }}
+name: Daily Tests
 
 on:
   schedule:
