@@ -2,9 +2,8 @@ name: Daily Tests
 
 on:
   schedule:
-    - cron: '0/30 * * * *'
+    - cron: '0/34 * * * *'
   workflow_dispatch:  # Also allow manual triggering
-  push:
 
 jobs:
   test:
