@@ -45,6 +45,7 @@ jobs:
     name: Send email notification
     needs: test
     runs-on: ubuntu-latest
+    if: ${{ failure() }}
 
     steps:
       - name: Send email
@@ -54,8 +55,8 @@ jobs:
           server_port: ${{ secrets.MAIL_PORT }}
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: email test!!!!! - Daily Tests
-          body: The tests in the "Daily Tests" workflow have not failed but I'm sending this as a test notification. Please check the logs for more details at https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          subject: Logomaker - Daily Tests
+          body: At least one of the in the "Daily Tests" workflow has failed. Please check the logs for more details at https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           to: ${{ secrets.MAIL_RECIPIENT }}
           from: GitHub Actions
 
