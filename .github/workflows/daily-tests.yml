@@ -2,8 +2,9 @@ name: Daily Tests - ${{ github.event.schedule }}
 
 on:
   schedule:
-    - cron: '0/25 * * * *'
+    - cron: '0/30 * * * *'
   workflow_dispatch:  # Also allow manual triggering
+  push:
 
 jobs:
   test:
