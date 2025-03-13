@@ -41,4 +41,22 @@ jobs:
         run: |
           pip install -i https://test.pypi.org/simple/ logomaker-acordero
           python -c "import logomaker; logomaker.run_tests()"
+  notify:
+    name: Send email notification
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+
+    steps:
+      - name: Send email
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ❌ GitHub Actions Test Failed - Daily Tests
+          body: The tests in the "Daily Tests" workflow have failed. Please check the logs for more details at https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: ${{ secrets.MAIL_RECIPIENT }}
+          from: GitHub Actions
 
