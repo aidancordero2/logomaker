@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:  # Also allow manual triggering
+  push:
 
 jobs:
   test:
@@ -35,6 +36,12 @@ jobs:
         run: |
           mkdir -p $HOME/.config/matplotlib
           echo "backend: Agg" > $HOME/.config/matplotlib/matplotlibrc
+
+      - name: Test build
+        run: |
+          pip install build
+          python -m build
+          ls -l dist/
 
       - name: Run tests
         run: |
