@@ -37,6 +37,12 @@ jobs:
           mkdir -p $HOME/.config/matplotlib
           echo "backend: Agg" > $HOME/.config/matplotlib/matplotlibrc
 
+      - name: Test build
+        run: |
+          pip install build
+          python -m build
+          ls -l dist/
+
       - name: Run tests
         run: |
           pip install logomaker
