@@ -1,7 +1,6 @@
-name: Publish logomaker to TestPyPI
+name: Publish logomaker to PyPI TestPyPI
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'v*'  # version tags for PyPI
@@ -12,10 +11,11 @@ jobs:
   test:
     # This will run the tests for each Python version
     name: Run Python Tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v4
@@ -41,22 +41,7 @@ jobs:
         pip install -i https://test.pypi.org/simple/ logomaker-acordero
         python -c "import logomaker; logomaker.run_tests()"
 
-  create-release:
-    # This will create a release on GitHub, automatically triggering a build on ReadTheDocs via a webhook
-    name: Create GitHub Release
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Create GitHub Release
-      if: github.ref_type == 'tag'
-      uses: softprops/action-gh-release@v1
-      with:
-        generate_release_notes: true
-        name: Release ${{ github.ref_name }}
-        prerelease: ${{ startsWith(github.ref_name, 'test') }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
         
   build:
     name: Build
@@ -99,7 +84,33 @@ jobs:
       with:
         name: python-package-distributions-${{ matrix.python-version }}
         path: dist/
-        
+
+  publish-to-pypi:
+    name: >-
+      Publish to PyPI
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs:
+      - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/logomaker-acordero/
+
+    permissions:
+      id-token: write # needed for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish dist to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+
+
   publish-to-testpypi:
     name: Publish to TestPyPI
     needs:
@@ -117,12 +128,59 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        pattern: python-package-distributions-*
+        pattern: python-package-distributions
         merge-multiple: true
         path: dist/
-    - name: Publish distribution 📦 to TestPyPI
+    - name: Publish dist to TestPyPI
       if: github.ref_type == 'tag' && startsWith(github.ref_name, 'test')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
+
+
+    github-release:
+      name: >-
+        Sign the distribution with Sigstore
+        and upload them to GitHub Release
+      runs-on: ubuntu-latest
+      if: always() && (success('publish-to-pypi') || success('publish-to-testpypi'))
+
+      permissions:
+        contents: write  # mandatory for making GitHub Releases
+        id-token: write  # mandatory for sigstore
+
+      steps:
+        - name: Download all the dists
+          uses: actions/download-artifact@v4
+          with:
+            name: python-package-distributions
+            path: dist/
+        - name: Sign the dists with Sigstore
+          uses: sigstore/gh-action-sigstore-python@v3.0.0
+          with:
+            inputs: >-
+              ./dist/*.tar.gz
+              ./dist/*.whl
+        - name: Create GitHub Release
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          run: >-
+            gh release create
+            "$GITHUB_REF_NAME"
+            --repo "$GITHUB_REPOSITORY"
+            --notes ""
+        - name: Upload artifact signatures to GitHub Release
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          # Upload to GitHub Release using the `gh` CLI.
+          # `dist/` contains the built packages, and the
+          # sigstore-produced signatures and certificates.
+          run: >-
+            gh release upload
+            "$GITHUB_REF_NAME" dist/**
+            --repo "$GITHUB_REPOSITORY"
+
+
+
+
   
