@@ -104,7 +104,7 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-distributions-*
           path: dist/
       - name: Publish dist to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -128,7 +128,7 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
-        pattern: python-package-distributions
+        pattern: python-package-distributions-*
         merge-multiple: true
         path: dist/
     - name: Publish dist to TestPyPI
@@ -143,7 +143,12 @@ jobs:
       Sign the distribution with Sigstore
       and upload them to GitHub Release
     runs-on: ubuntu-latest
-    if: always() && (success('publish-to-pypi') || success('publish-to-testpypi'))
+    needs:
+      - publish-to-pypi
+      - publish-to-testpypi
+    if: >-
+      always() && 
+      (needs.publish-to-pypi.result == 'success' || needs.publish-to-testpypi.result == 'success')
 
     permissions:
       contents: write  # mandatory for making GitHub Releases
@@ -153,7 +158,8 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          pattern: python-package-distributions-*
+          merge-multiple: true
           path: dist/
       - name: Sign the dists with Sigstore
         uses: sigstore/gh-action-sigstore-python@v3.0.0
