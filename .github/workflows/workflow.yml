@@ -88,7 +88,7 @@ jobs:
   publish-to-pypi:
     name: >-
       Publish to PyPI
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+
     needs:
       - build
     runs-on: ubuntu-latest
@@ -104,9 +104,11 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions-*
+          pattern: python-package-distributions-*
+          merge-multiple: true
           path: dist/
       - name: Publish dist to PyPI
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         uses: pypa/gh-action-pypi-publish@release/v1
 
 
