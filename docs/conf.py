@@ -20,7 +20,7 @@ import sys
 sys.path.append('../')
 # -- Project information -----------------------------------------------------
 
-from src import logomaker
+import logomaker
 from datetime import datetime
 
 project = 'logomaker'
@@ -28,8 +28,8 @@ copyright = '2019, Ammar Tareen and Justin B. Kinney'
 author = 'Ammar Tareen and Justin B. Kinney'
 
 # Version info
-version = src.__version__  # The short X.Y version
-release = src.__version__  # The full version, including alpha/beta/rc tags
+version = logomaker.__version__  # The short X.Y version
+release = logomaker.__version__  # The full version, including alpha/beta/rc tags
 
 # Build date
 html_last_updated_fmt = '%B %d, %Y'  # Format for the build date
