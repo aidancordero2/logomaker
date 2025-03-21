@@ -45,7 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python -c "import logomaker; logomaker.run_tests()"
+          pytest
   notify:
     name: Send email notification
     needs: test
