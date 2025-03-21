@@ -1,4 +1,4 @@
-name: Publish logomaker to PyPI TestPyPI
+name: Publish logomaker to PyPI and TestPyPI
 
 on:
   push:
