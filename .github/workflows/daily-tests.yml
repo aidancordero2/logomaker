@@ -45,7 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest
+          pytest -v
   notify:
     name: Send email notification
     needs: test

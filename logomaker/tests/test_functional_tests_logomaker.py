@@ -256,7 +256,7 @@ def test_Logo_style_single_glyph():
 
     # test parameter p
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_single_glyph, var_name='p',
-                          fail_list=[-1,'x',1.1,10000], success_list=[0,1,10],c='A')
+                          fail_list=[-1,'x',1.1,10000], success_list=[0,1,10,4.20],c='A')
 
     # test parameter c
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_single_glyph, var_name='c',
