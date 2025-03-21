@@ -38,7 +38,6 @@ jobs:
 
     - name: Run tests
       run: |
-        #pip install logomaker-acordero
         python -c "import logomaker; logomaker.run_tests()"
 
   

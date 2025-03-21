@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install .
           pip install pytest hatch
 
       - name: Configure matplotlib backend
@@ -45,7 +45,6 @@ jobs:
 
       - name: Run tests
         run: |
-          #pip install logomaker
           python -c "import logomaker; logomaker.run_tests()"
   notify:
     name: Send email notification
