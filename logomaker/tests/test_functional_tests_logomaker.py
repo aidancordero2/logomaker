@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import logomaker
 from logomaker.src.error_handling import LogomakerError
+import pytest
 
 global_success_counter = 0
 global_fail_counter = 0
@@ -12,6 +13,7 @@ bool_fail_list = [0, -1, 'True', 'x', 1]
 bool_success_list = [False, True]
 
 # helper method for functional test_for_mistake
+@pytest.mark.skip()
 def test_for_mistake(func, *args, **kw):
     """
     Run a function with the specified parameters and register whether
@@ -43,7 +45,7 @@ def test_for_mistake(func, *args, **kw):
     else:
         global_success_counter += 1
 
-
+@pytest.mark.skip()
 def test_parameter_values(func,
                           var_name=None,
                           fail_list=[],

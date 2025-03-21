@@ -5,8 +5,8 @@ on:
     tags:
       - 'v*'  # version tags for PyPI
       - 'test*'  # test tags for TestPyPI
-            
-      
+
+
 jobs:
   test:
     # This will run the tests for each Python version
@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -38,11 +38,11 @@ jobs:
 
     - name: Run tests
       run: |
-        pip install -i https://test.pypi.org/simple/ logomaker-acordero
+        #pip install logomaker-acordero
         python -c "import logomaker; logomaker.run_tests()"
 
   
-        
+
   build:
     name: Build
     needs: [test]
@@ -60,25 +60,25 @@ jobs:
         echo "github.base_ref = ${{ github.base_ref }}"
         echo "github.ref_type = ${{ github.ref_type }}"
         echo "github.ref_name = ${{ github.ref_name }}"
-        
+
     - uses: actions/checkout@v4
       with:
         persist-credentials: false
         fetch-depth: 0  # Get all history for branch checking
-        
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install build twine hatch
-        
+
     - name: Build package
       run: python -m build
-      
+
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
