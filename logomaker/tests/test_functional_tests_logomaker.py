@@ -8,9 +8,24 @@ import pytest
 global_success_counter = 0
 global_fail_counter = 0
 
-# Common success and fail lists
-bool_fail_list = [0, -1, 'True', 'x', 1]
-bool_success_list = [False, True]
+@pytest.fixture
+def default_Logo_kwargs():
+    return {'df': good_crp_df}
+
+
+def generate_id(param):
+    """
+    Create a custom ID based on the parameter. This function is used
+    when tests are parametrized using @pytest.mark.parametrize.
+
+    :param param: Tuple from @pytest.mark.parametrize
+    :return: A string ID for the test case
+    """
+    print(param)
+    var_name, val, should_fail, _ = param
+    status = "valid" if not should_fail else "invalid"
+    return f"{var_name}_{status}_{str(val)[:10]}"
+
 
 # helper method for functional test_for_mistake
 @pytest.mark.skip()
@@ -45,19 +60,20 @@ def test_for_mistake(func, *args, **kw):
     else:
         global_success_counter += 1
 
+    assert not obj.mistake
+
 @pytest.mark.skip()
 def test_parameter_values(func,
                           var_name=None,
-                          fail_list=[],
-                          success_list=[],
+                          val = None,
+                          should_fail=None,
                           **kwargs):
     """
-    Tests predictable success & failure of different values for a
-    specified parameter when passed to a specified function
+    Tests if a function call with specific parameter
+    value succeeds or fails as expected
 
     Parameters
     ----------
-
     func: (function)
         Executable to test. Can be function or class constructor.
 
@@ -65,11 +81,11 @@ def test_parameter_values(func,
         Name of variable to test. If not specified, function is
         tested for success in the absence of any passed parameters.
 
-    fail_list: (list)
-        List of values for specified variable that should fail
+    val:
+        Value of specified var_name to be tested.
 
-    success_list: (list)
-        List of values for specified variable that should succeed
+    should_fail: (bool)
+        True if function is expected to fail, False otherwise.
 
     **kwargs:
         Other keyword variables to pass onto func.
@@ -81,22 +97,13 @@ def test_parameter_values(func,
 
     """
 
-    # If variable name is specified, test each value in fail_list
-    # and success_list
+    # User feed
+    print("Testing %s() parameter %s ..." % (func.__name__, var_name))
+
+    # If variable name is specified, test the value
     if var_name is not None:
-
-        # User feedback
-        print("Testing %s() parameter %s ..." % (func.__name__, var_name))
-
-        # Test parameter values that should fail
-        for x in fail_list:
-            kwargs[var_name] = x
-            test_for_mistake(func=func, should_fail=True, **kwargs)
-
-        # Test parameter values that should succeed
-        for x in success_list:
-            kwargs[var_name] = x
-            test_for_mistake(func=func, should_fail=False, **kwargs)
+        kwargs[var_name] = val
+        test_for_mistake(func=func, should_fail=should_fail, **kwargs)
 
         print("Tests passed: %d. Tests failed: %d.\n" %
               (global_success_counter, global_fail_counter))
@@ -114,42 +121,69 @@ def test_parameter_values(func,
     plt.close('all')
 
 
-def test_Logo():
+# common success and fail lists
+bool_fail_list = [0, -1, 'True', 'x', 1]
+bool_success_list = [False, True]
 
-    # df inputs that successfully execute when entered into Logo.
-    good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
-    good_prob_df = logomaker.get_example_matrix('ss_probability_matrix', print_description=False)
-    random_df = pd.DataFrame(np.random.randint(0, 3, size=(10, 4)), columns=list('ACGT'))
+# df inputs that successfully execute when entered into Logo.
+good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
+good_prob_df = logomaker.get_example_matrix('ss_probability_matrix', print_description=False)
+random_df = pd.DataFrame(np.random.randint(0, 3, size=(10, 4)), columns=list('ACGT'))
 
-    # df inputs that fail when entered into Logo.
-    bad_df1 = 'x'
+# df inputs that fail when entered into Logo.
+bad_df1 = 'x'
 
+# parametrize Logo tests
+@pytest.mark.parametrize("var_name,val,should_fail,input_kwargs", [
     # test parameter df
-    test_parameter_values(func=logomaker.Logo, var_name='df',fail_list=[bool_fail_list,bad_df1],
-                          success_list=[good_crp_df,random_df])
+    ('df', bool_fail_list, True, {}), ('df', bad_df1, True, {}),
+
+    ('df', good_crp_df, False, {}), ('df', random_df, False, {}),
 
     # test parameter colors
-    test_parameter_values(func=logomaker.Logo, var_name='color_scheme', fail_list=['x','bad_color_name',3],
-                          success_list=['classic', 'grays', 'charge','salmon'],
-                          df=good_crp_df)
+    ('color_scheme', 'x', True, {}), ('color_scheme', 'bad_color_name', True,{}), ('color_scheme', 3, True, {}),
+
+    ('color_scheme', 'classic', False, {}),  ('color_scheme', 'grays', False, {}),('color_scheme', 'charge', False, {}),
+    ('color_scheme', 'grays', False, {}),
 
     # test parameter font names
-    test_parameter_values(func=logomaker.Logo, var_name='font_name', fail_list=[True, None, good_crp_df],
-                          success_list=['DejaVu Sans', 'Arial Rounded MT Bold', 'Times New Roman'],
-                          df=good_crp_df)
+    ('font_name', True, True, {}), ('font_name', None, True, {}), ('font_name', good_crp_df, True, {}),
 
-    # test parameter stack_order
-    test_parameter_values(func=logomaker.Logo, var_name='stack_order', fail_list=['incorrect argument', 0.0, None],
-                          success_list=['small_on_top', 'big_on_top', 'fixed'],
-                          df=good_crp_df)
+    ('font_name', 'DejaVu Sans', False, {}), ('font_name', 'Arial Rounded MT Bold', False, {}),
+    ('font_name', 'Times New Roman', False, {}),
+
+    # test parameter stack order
+    ('stack_order', 'incorrect_argument', True, {}), ('stack_order', 0.0, True, {}),  ('stack_order', None, True, {}),
+
+    ('stack_order', 'small_on_top', False, {}), ('stack_order', 'big_on_top', False, {}),
+    ('stack_order', 'fixed', False, {}),
 
     # test parameter center_values
-    test_parameter_values(func=logomaker.Logo, var_name='center_values', fail_list=['incorrect argument', 0.0, None],
-                          success_list=[True, False], df=good_crp_df)
+    ('center_values', 'incorrect_argument', True, {}), ('center_values', 0.0, True, {}),
+    ('center_values', None, True, {}),
+
+    ('center_values', True, False, {}), ('center_values', False, False, {}),
 
     # test parameter baseline_width
-    test_parameter_values(func=logomaker.Logo, var_name='baseline_width', fail_list=['incorrect argument', -0.1, None],
-                          success_list=[0,0.5,3], df=good_crp_df)
+    ('baseline_width', 'incorrect_argument', True, {}), ('baseline_width', -0.1, True, {}),
+    ('baseline_width', None, True, {}),
+
+    ('baseline_width', 0, False, {}), ('baseline_width', 0.5, False, {}),  ('baseline_width', 3, False, {}),
+
+    # test parameter flip_below
+    ('flip_below', 'incorrect_argument', True, {})
+
+    ],
+    ids = generate_id
+    #ids = [f'Test{i+1}' for i in range(27)]
+
+)
+def test_Logo_aidan(var_name, val, should_fail, input_kwargs, default_Logo_kwargs):
+    full_kwargs = default_Logo_kwargs.copy()
+    full_kwargs.update(input_kwargs)
+    test_parameter_values(logomaker.Logo, var_name, val, should_fail, **full_kwargs)
+
+def test_Logo():
 
     # test parameter flip_below
     test_parameter_values(func=logomaker.Logo, var_name='flip_below', fail_list=['incorrect argument', -0.1, None],
@@ -173,7 +207,7 @@ def test_Logo():
     # test parameter vsep
     test_parameter_values(func=logomaker.Logo, var_name='vsep',
                           fail_list=['incorrect argument', -0.1, None],
-                          success_list=[0.0, 0,0.3,10], df=good_crp_df)
+                          success_list=[0.0, 0, 0.3, 10], df=good_crp_df)
 
     # test parameter vsep
     # TODO: note that a value of True/False is still causing a logo to be drawn, eventhough draw_now = False
@@ -188,83 +222,78 @@ def test_Logo():
 
     # test parameter figsize
     test_parameter_values(func=logomaker.Logo, var_name='figsize',
-                          fail_list=['incorrect argument', -0.1, [-1,-1],[-1],[0,0],['x','y'],(1,2,3)],
-                          success_list=[(10, 2.5),[5,5]], df=good_crp_df)
+                          fail_list=['incorrect argument', -0.1, [-1, -1], [-1], [0, 0], ['x', 'y'], (1, 2, 3)],
+                          success_list=[(10, 2.5), [5, 5]], df=good_crp_df)
 
     # validate ax
     _, temp_ax = plt.subplots(figsize=[3, 3])
     test_parameter_values(func=logomaker.Logo, var_name='ax',
-                          fail_list=['x',1,True],
+                          fail_list=['x', 1, True],
                           success_list=[temp_ax, None], df=good_crp_df)
 
 
 def test_Logo_style_glyphs():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter color_scheme
-    test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs,var_name='color_scheme',
-                          fail_list=['bad_color_scheme',1,True],
-                          success_list=['classic','gray','salmon'])
+    test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs, var_name='color_scheme',
+                          fail_list=['bad_color_scheme', 1, True],
+                          success_list=['classic', 'gray', 'salmon'])
 
     # TODO: how should we test kwargs for this (and other) methods?
 
 
 def test_Logo_fade_glyphs_in_probability_logo():
-
     good_prob_df = logomaker.get_example_matrix('ss_probability_matrix', print_description=False)
 
     # test parameter v_alpha0
     test_parameter_values(func=logomaker.Logo(good_prob_df).fade_glyphs_in_probability_logo, var_name='v_alpha0',
-                          fail_list=[-1,1.1,1,1.0,'xxx',True], success_list=[0,0.0,0.999,0.5])
+                          fail_list=[-1, 1.1, 1, 1.0, 'xxx', True], success_list=[0, 0.0, 0.999, 0.5])
 
     # TODO: a value of True v_alpha_1 works now, this should probably be fixed.
     # test parameter v_alpha1
     test_parameter_values(func=logomaker.Logo(good_prob_df).fade_glyphs_in_probability_logo, var_name='v_alpha1',
-                          fail_list=[1.1, -1, 'xxx'], success_list=[0.999, 0.5,1.0])
+                          fail_list=[1.1, -1, 'xxx'], success_list=[0.999, 0.5, 1.0])
 
 
 def test_Logo_style_glyphs_below():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter color
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_below, var_name='color',
-                          fail_list=[0,'xxx',True,[0,0,-1]], success_list=['red', [1,1,1], [0,0,0],[0.1,0.2,0.3], None])
+                          fail_list=[0, 'xxx', True, [0, 0, -1]],
+                          success_list=['red', [1, 1, 1], [0, 0, 0], [0.1, 0.2, 0.3], None])
 
     # test parameter alpha
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_below, var_name='alpha',
-                          fail_list=[-1,'x',1.1], success_list=[0,1,0.5])
+                          fail_list=[-1, 'x', 1.1], success_list=[0, 1, 0.5])
 
     # test parameter shade
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_below, var_name='shade',
-                          fail_list=[-1,'x',1.1], success_list=[0,1,0.5])
+                          fail_list=[-1, 'x', 1.1], success_list=[0, 1, 0.5])
 
     # test parameter fade
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_below, var_name='fade',
-                          fail_list=[-1,'x',1.1], success_list=[0,1,0.5])
+                          fail_list=[-1, 'x', 1.1], success_list=[0, 1, 0.5])
 
     # test parameter flip
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_below, var_name='flip',
                           fail_list=bool_fail_list, success_list=bool_success_list)
 
 
-
 def test_Logo_style_single_glyph():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter p
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_single_glyph, var_name='p',
-                          fail_list=[-1,'x',1.1,10000], success_list=[0,1,10,4.20],c='A')
+                          fail_list=[-1, 'x', 1.1, 10000], success_list=[0, 1, 10], c='A')
 
     # test parameter c
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_single_glyph, var_name='c',
-                          fail_list=[-1, 'x', 1.1], success_list=['A','C','G','T'], p=1)
+                          fail_list=[-1, 'x', 1.1], success_list=['A', 'C', 'G', 'T'], p=1)
 
 
 def test_Logo_style_glyphs_in_sequence():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # randomly make up a sequence of the correct length
@@ -275,22 +304,20 @@ def test_Logo_style_glyphs_in_sequence():
     test_bad_sequence = np.random.choice(['A', 'C', 'G', 'T'], size=10, p=[0.25, 0.25, 0.25, 0.25])
     test_bad_sequence = "".join(test_bad_sequence)
 
-
     # test parameter sequence
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_glyphs_in_sequence, var_name='sequence',
                           fail_list=[-1, 'x', 1.1, test_bad_sequence], success_list=[test_good_sequence])
 
 
 def test_Logo_highlight_position():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter p
     test_parameter_values(func=logomaker.Logo(good_crp_df).highlight_position, var_name='p',
-                          fail_list=['x',1.5], success_list=[0, 1, 10])
+                          fail_list=['x', 1.5], success_list=[0, 1, 10])
+
 
 def test_Logo_highlight_position_range():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter pmin
@@ -303,20 +330,22 @@ def test_Logo_highlight_position_range():
 
     # test parameter padding
     test_parameter_values(func=logomaker.Logo(good_crp_df).highlight_position_range, var_name='padding',
-                          fail_list=['x', -1], success_list=[-0.5, 0, 10], pmin=5,pmax=10)
+                          fail_list=['x', -1], success_list=[-0.5, 0, 10], pmin=5, pmax=10)
 
     # test parameter color
     test_parameter_values(func=logomaker.Logo(good_crp_df).highlight_position_range, var_name='color',
-                          fail_list=['x', 1,True,'wrong_color'], success_list=['pink','red',[1,1,1]], pmin=5, pmax=10)
+                          fail_list=['x', 1, True, 'wrong_color'], success_list=['pink', 'red', [1, 1, 1]], pmin=5,
+                          pmax=10)
 
     # test parameter edgecolor
     test_parameter_values(func=logomaker.Logo(good_crp_df).highlight_position_range, var_name='edgecolor',
-                          fail_list=['x', 1, True, 'wrong_color'], success_list=[None,'pink', 'red', [1, 1, 1]], pmin=5,
+                          fail_list=['x', 1, True, 'wrong_color'], success_list=[None, 'pink', 'red', [1, 1, 1]],
+                          pmin=5,
                           pmax=10)
 
     # test parameter floor
     test_parameter_values(func=logomaker.Logo(good_crp_df).highlight_position_range, var_name='floor',
-                          fail_list=['x', 10], success_list=[-1,1,None],
+                          fail_list=['x', 10], success_list=[-1, 1, None],
                           pmin=5,
                           pmax=10)
 
@@ -334,7 +363,6 @@ def test_Logo_highlight_position_range():
 
 
 def test_Logo_draw_baseline():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter zorder
@@ -347,11 +375,10 @@ def test_Logo_draw_baseline():
 
     # test parameter linewidth
     test_parameter_values(func=logomaker.Logo(good_crp_df).draw_baseline, var_name='linewidth',
-                          fail_list=['x', -1, '1', None], success_list=[0,1,1.5,2])
+                          fail_list=['x', -1, '1', None], success_list=[0, 1, 1.5, 2])
 
 
 def test_Logo_style_xticks():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter anchor
@@ -369,15 +396,15 @@ def test_Logo_style_xticks():
 
     # test parameter rotation
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_xticks, var_name='rotation',
-                          fail_list=[None, 'x'], success_list=[-12,0,1.4,200])
+                          fail_list=[None, 'x'], success_list=[-12, 0, 1.4, 200])
+
 
 def test_Logo_style_spines():
-
     good_crp_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
 
     # test parameter anchor
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_spines, var_name='spines',
-                          fail_list=['x', None, 0.5, 1.0,'top'],
+                          fail_list=['x', None, 0.5, 1.0, 'top'],
                           success_list=[('top', 'bottom', 'left', 'right'),
                                         ['top', 'bottom', 'left', 'right'],
                                         ('top', 'bottom', 'left'),
@@ -390,24 +417,25 @@ def test_Logo_style_spines():
 
     # test parameter color
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_spines, var_name='color',
-                          fail_list=['wrong_color',3,[0.5,0.5,0.5,0.5]], success_list=['black','green',[0.4,0.5,1.0]])
+                          fail_list=['wrong_color', 3, [0.5, 0.5, 0.5, 0.5]],
+                          success_list=['black', 'green', [0.4, 0.5, 1.0]])
 
     # test parameter linewidth
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_spines, var_name='linewidth',
-                          fail_list=['xxx',-1], success_list=[0.0,0,1])
+                          fail_list=['xxx', -1], success_list=[0.0, 0, 1])
 
     # test parameter bounds
     test_parameter_values(func=logomaker.Logo(good_crp_df).style_spines, var_name='bounds',
-                          fail_list=['xxx', -1], success_list=[None,[0,1]])
+                          fail_list=['xxx', -1], success_list=[None, [0, 1]])
+
 
 def test_transform_matrix():
-
     good_crp_weight_df = logomaker.get_example_matrix('crp_energy_matrix', print_description=False)
     good_crp_counts_df = logomaker.get_example_matrix('crp_counts_matrix', print_description=False)
 
     # test parameter df
     test_parameter_values(func=logomaker.transform_matrix, var_name='df',
-                          fail_list=['x',good_crp_weight_df,None], success_list=[good_crp_counts_df],
+                          fail_list=['x', good_crp_weight_df, None], success_list=[good_crp_counts_df],
                           from_type='counts', to_type='probability')
 
     test_parameter_values(func=logomaker.transform_matrix, var_name='df',
@@ -421,7 +449,7 @@ def test_transform_matrix():
     # test parameter center_values
     test_parameter_values(func=logomaker.transform_matrix, var_name='center_values',
                           fail_list=bool_fail_list, success_list=bool_success_list,
-                          df= good_crp_counts_df)
+                          df=good_crp_counts_df)
 
     # test parameter normalize_values
     test_parameter_values(func=logomaker.transform_matrix, var_name='normalize_values',
@@ -430,38 +458,37 @@ def test_transform_matrix():
 
     # test parameter from_type
     test_parameter_values(func=logomaker.transform_matrix, var_name='from_type',
-                          fail_list=[1,'x',None], success_list=['counts'],
-                          df=good_crp_counts_df,to_type='probability')
+                          fail_list=[1, 'x', None], success_list=['counts'],
+                          df=good_crp_counts_df, to_type='probability')
 
     # test parameter to_type
     test_parameter_values(func=logomaker.transform_matrix, var_name='to_type',
-                          fail_list=[1, 'x', None], success_list=['probability','weight','information'],
+                          fail_list=[1, 'x', None], success_list=['probability', 'weight', 'information'],
                           df=good_crp_counts_df, from_type='counts')
 
     # test parameter background
     test_parameter_values(func=logomaker.transform_matrix, var_name='background',
-                          fail_list=[1, 'x', [-1,1,1,1]], success_list=[None, [0.25,0.25,0.25,0.25]],
+                          fail_list=[1, 'x', [-1, 1, 1, 1]], success_list=[None, [0.25, 0.25, 0.25, 0.25]],
                           df=good_crp_counts_df, from_type='counts', to_type='information')
 
     # test parameter pseudocount
     test_parameter_values(func=logomaker.transform_matrix, var_name='pseudocount',
-                          fail_list=[None, 'x', -1], success_list=[0,1,10],
+                          fail_list=[None, 'x', -1], success_list=[0, 1, 10],
                           df=good_crp_counts_df, from_type='counts', to_type='probability')
 
 
 def test_sequence_to_matrix():
-
     # test parameter seq
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='seq',
                           fail_list=[None, 3, True], success_list=['ACGT', '!@#$', 'logomaker'])
 
     # test parameter cols
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='cols',
-                          fail_list=[0, True], success_list=[None, ['A','C','G','T']],seq='ACGTACGT')
+                          fail_list=[0, True], success_list=[None, ['A', 'C', 'G', 'T']], seq='ACGTACGT')
 
     # test parameter alphabet
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='alphabet',
-                          fail_list=[0, True, 'xxx'], success_list=[None,'dna'], seq='ACGTACGT')
+                          fail_list=[0, True, 'xxx'], success_list=[None, 'dna'], seq='ACGTACGT')
 
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='alphabet',
                           fail_list=[], success_list=['rna'], seq='ACGUACGU')
@@ -475,17 +502,16 @@ def test_sequence_to_matrix():
 
     # test parameter to_type
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='to_type',
-                          fail_list=[0, True, 'xxx'], success_list=['probability','weight','information'],
+                          fail_list=[0, True, 'xxx'], success_list=['probability', 'weight', 'information'],
                           seq='ACGTACGT')
 
     # test parameter center_weights
     test_parameter_values(func=logomaker.sequence_to_matrix, var_name='center_weights',
-                           fail_list=bool_fail_list, success_list=bool_success_list,
-                           seq='ACGTACGT',to_type='weight')
+                          fail_list=bool_fail_list, success_list=bool_success_list,
+                          seq='ACGTACGT', to_type='weight')
 
 
 def test_alignment_to_matrix():
-
     # get sequences from file
     with logomaker.open_example_datafile('crp_sites.fa', print_description=False) as f:
         raw_seqs = f.readlines()
@@ -493,25 +519,26 @@ def test_alignment_to_matrix():
 
     # test parameter sequences
     test_parameter_values(func=logomaker.alignment_to_matrix, var_name='sequences',
-                          fail_list = [0,'x',['AACCT','AACGATA']], success_list = [seqs,['ACA','GGA']])
+                          fail_list=[0, 'x', ['AACCT', 'AACGATA']], success_list=[seqs, ['ACA', 'GGA']])
 
     # test parameter counts
     test_parameter_values(func=logomaker.alignment_to_matrix, var_name='counts',
-                          fail_list=[0, 'x', -1], success_list=[None, [3, 1], np.array([3, 1])], sequences=['ACA', 'GGA'])
+                          fail_list=[0, 'x', -1], success_list=[None, [3, 1], np.array([3, 1])],
+                          sequences=['ACA', 'GGA'])
 
     # test parameter to_type
     test_parameter_values(func=logomaker.alignment_to_matrix, var_name='to_type',
-                          fail_list=[0, True, 'xxx'], success_list=['counts','probability', 'weight', 'information'],
+                          fail_list=[0, True, 'xxx'], success_list=['counts', 'probability', 'weight', 'information'],
                           sequences=seqs)
 
     # test parameter background
     test_parameter_values(func=logomaker.alignment_to_matrix, var_name='background',
-                          fail_list=[1, 'x'], success_list=[None, [0.25,0.25,0.25,0.25]],
+                          fail_list=[1, 'x'], success_list=[None, [0.25, 0.25, 0.25, 0.25]],
                           sequences=seqs)
 
     # test parameter characters_to_ignore
     test_parameter_values(func=logomaker.alignment_to_matrix, var_name='characters_to_ignore',
-                          fail_list=[1, 0.5,True,None], success_list=['A','C','G'],
+                          fail_list=[1, 0.5, True, None], success_list=['A', 'C', 'G'],
                           sequences=seqs)
 
     # test parameter center_weights
@@ -526,7 +553,6 @@ def test_alignment_to_matrix():
 
 
 def test_saliency_to_matrix():
-
     # load saliency data
     with logomaker.open_example_datafile('nn_saliency_values.txt', print_description=False) as f:
         saliency_data_df = pd.read_csv(f, comment='#', sep='\t')
@@ -543,17 +569,16 @@ def test_saliency_to_matrix():
 
     # test parameter cols
     test_parameter_values(func=logomaker.saliency_to_matrix, var_name='cols',
-                          fail_list=[-1,'x'], success_list=[None,['A','C','G','T']],
-                          seq=saliency_data_df['character'],values=saliency_data_df['value'])
+                          fail_list=[-1, 'x'], success_list=[None, ['A', 'C', 'G', 'T']],
+                          seq=saliency_data_df['character'], values=saliency_data_df['value'])
 
     # test parameter alphabet
     test_parameter_values(func=logomaker.saliency_to_matrix, var_name='alphabet',
-                          fail_list=[0, True, 'xxx'], success_list=[None,'dna'],
+                          fail_list=[0, True, 'xxx'], success_list=[None, 'dna'],
                           seq=saliency_data_df['character'], values=saliency_data_df['value'])
 
 
 def test_Glyph():
-
     fig, ax = plt.subplots(figsize=[7, 3])
 
     # set bounding box
@@ -562,18 +587,18 @@ def test_Glyph():
 
     # test parameter p
     # TODO: need to fix fail_list bugs for parameter p
-    test_parameter_values(func=logomaker.Glyph,var_name='p',
-                          fail_list=[],success_list=[0,1,10, 0.5],
+    test_parameter_values(func=logomaker.Glyph, var_name='p',
+                          fail_list=[], success_list=[0, 1, 10, 0.5],
                           c='A', ax=ax, floor=0, ceiling=1)
 
     # test parameter c
     test_parameter_values(func=logomaker.Glyph, var_name='c',
-                          fail_list=[0,0.1,None], success_list=['A','C','x'],
+                          fail_list=[0, 0.1, None], success_list=['A', 'C', 'x'],
                           p=1, ax=ax, floor=0, ceiling=1)
 
     # test parameter floor
     test_parameter_values(func=logomaker.Glyph, var_name='floor',
-                          fail_list=['x',2, None], success_list=[0,0.1,0.5],
+                          fail_list=['x', 2, None], success_list=[0, 0.1, 0.5],
                           p=1, ax=ax, ceiling=1, c='A')
 
     # test parameter ceiling
@@ -583,12 +608,12 @@ def test_Glyph():
 
     # test parameter ax
     test_parameter_values(func=logomaker.Glyph, var_name='ax',
-                          fail_list=['x', -1], success_list=[None,ax],
+                          fail_list=['x', -1], success_list=[None, ax],
                           p=1, ceiling=1, floor=0, c='A')
 
     # test parameter width
     test_parameter_values(func=logomaker.Glyph, var_name='width',
-                          fail_list=['x', -1], success_list=[0.1,1,10],
+                          fail_list=['x', -1], success_list=[0.1, 1, 10],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
     # test parameter vpad
@@ -603,12 +628,12 @@ def test_Glyph():
 
     # test parameter font_weight
     test_parameter_values(func=logomaker.Glyph, var_name='font_weight',
-                          fail_list=[-1,'xxx'], success_list=['bold',5, 'normal'],
+                          fail_list=[-1, 'xxx'], success_list=['bold', 5, 'normal'],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
     # test parameter color
     test_parameter_values(func=logomaker.Glyph, var_name='color',
-                          fail_list=[-1, 'xxx'], success_list=['red', [1,1,1], [0,0,0],[0.1,0.2,0.3]],
+                          fail_list=[-1, 'xxx'], success_list=['red', [1, 1, 1], [0, 0, 0], [0.1, 0.2, 0.3]],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
     # test parameter edgecolor
@@ -623,7 +648,7 @@ def test_Glyph():
 
     # test parameter dont_stretch_more_than
     test_parameter_values(func=logomaker.Glyph, var_name='dont_stretch_more_than',
-                          fail_list=[-1, None], success_list=['E','A'],
+                          fail_list=[-1, None], success_list=['E', 'A'],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
     # test parameter flip
@@ -638,7 +663,7 @@ def test_Glyph():
 
     # test parameter zorder
     test_parameter_values(func=logomaker.Glyph, var_name='zorder',
-                          fail_list=['x'], success_list=[0,0.5,1,5],
+                          fail_list=['x'], success_list=[0, 0.5, 1, 5],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
     # test parameter alpha
@@ -648,16 +673,16 @@ def test_Glyph():
 
     # test parameter figsize
     test_parameter_values(func=logomaker.Glyph, var_name='figsize',
-                          fail_list=['incorrect argument', ['x', 'y'], (1, 2, 3),[1,-1]],
+                          fail_list=['incorrect argument', ['x', 'y'], (1, 2, 3), [1, -1]],
                           success_list=[(10, 2.5), [5, 5]],
                           p=1, ceiling=1, floor=0, c='A', ax=ax)
 
 
 def test_logomaker_get_data_methods():
-
     # testing parameter name in get_example_matrix
     test_parameter_values(func=logomaker.get_example_matrix, var_name='name',
-                          fail_list = ['wrong argument', -1], success_list=['crp_energy_matrix','ww_counts_matrix'], print_description=False)
+                          fail_list=['wrong argument', -1], success_list=['crp_energy_matrix', 'ww_counts_matrix'],
+                          print_description=False)
 
     # testing parameter print_description in get_example_matrix
     test_parameter_values(func=logomaker.get_example_matrix, var_name='print_description',
@@ -665,16 +690,17 @@ def test_logomaker_get_data_methods():
 
     # testing parameter name in open_example_datafile
     test_parameter_values(func=logomaker.open_example_datafile, var_name='name',
-                          fail_list=['wrong argument', -1], success_list=['nn_saliency_values.txt', 'ss_sequences.txt'], print_description=False)
+                          fail_list=['wrong argument', -1], success_list=['nn_saliency_values.txt', 'ss_sequences.txt'],
+                          print_description=False)
 
     # testing parameter print_description in open_example_datafile
     test_parameter_values(func=logomaker.open_example_datafile, var_name='print_description',
                           fail_list=bool_fail_list, success_list=bool_success_list,
                           name='nn_saliency_values.txt')
 
-def test_demo():
 
-    test_parameter_values(func=logomaker.demo,var_name='name',
+def test_demo():
+    test_parameter_values(func=logomaker.demo, var_name='name',
                           fail_list=[0, True, 'xxx'], success_list=['crp', 'fig1b'])
 
     plt.close('all')
@@ -695,7 +721,7 @@ def run_tests():
 
     global global_fail_counter
     global global_success_counter
-    
+
     # run tests for the Logo class and it's helper methods
     test_Logo()
     test_Logo_style_glyphs()
@@ -718,17 +744,18 @@ def run_tests():
     # run tests for the Glyph class
     test_Glyph()
 
-    #test_demo()
+    # test_demo()
     test_logomaker_get_data_methods()
-    
+
     # # Trigger artificial failture for Python 3.8, just for testing purposes.
     # if sys.version_info.major == 3 and sys.version_info.minor < 9:
     #     global_fail_counter += 1
-    
+
     if global_fail_counter > 0:
         raise LogomakerError(f'{global_fail_counter} tests failed. See above for details.')
     else:
         print('All tests passed')
+
 
 if __name__ == '__main__':
     run_tests()

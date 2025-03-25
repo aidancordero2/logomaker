@@ -1,6 +1,7 @@
 from __future__ import division
 from functools import wraps
 import warnings
+import pytest
 class LogomakerError(Exception):
     """
     Class used by Logomaker to handle errors.
@@ -55,7 +56,7 @@ def check(condition: bool, message: str, warn: bool = None):
     if not condition:
         Error = LogomakerError(message)
         if warn:
-            warnings.warn(Error)
+            warnings.warn(str(Error))
         else:
             raise Error
 
@@ -110,6 +111,8 @@ def handle_errors(func):
                 print('UNEXPECTED SUCCESS.')
                 mistake = True
 
+
+
             # If running functional test and expect to pass
             elif should_fail is False:
                 print('Expected success.')
@@ -130,6 +133,7 @@ def handle_errors(func):
             elif should_fail is False:
                 print("UNEXPECTED ERROR: {}".format(e.__str__()))
                 mistake = True
+
 
             # Otherwise, raise error
             else:
