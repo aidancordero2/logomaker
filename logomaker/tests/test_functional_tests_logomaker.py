@@ -13,6 +13,7 @@ def default_Logo_kwargs():
     return {'df': good_crp_df}
 
 
+
 def generate_id(param):
     """
     Create a custom ID based on the parameter. This function is used
@@ -174,7 +175,7 @@ bad_df1 = 'x'
     ('flip_below', 'incorrect_argument', True, {})
 
     ],
-    ids = generate_id
+    #ids = generate_id
     #ids = [f'Test{i+1}' for i in range(27)]
 
 )
@@ -723,29 +724,8 @@ def run_tests():
     global global_success_counter
 
     # run tests for the Logo class and it's helper methods
-    test_Logo()
-    test_Logo_style_glyphs()
-    test_Logo_fade_glyphs_in_probability_logo()
-    test_Logo_style_glyphs_below()
-    test_Logo_style_single_glyph()
-    test_Logo_style_glyphs_in_sequence()
-    test_Logo_highlight_position()
-    test_Logo_highlight_position_range()
-    test_Logo_draw_baseline()
-    test_Logo_style_xticks()
-    test_Logo_style_spines()
+    test_Logo_aidan()
 
-    # run tests for the methods in the matrix module
-    test_transform_matrix()
-    test_sequence_to_matrix()
-    test_alignment_to_matrix()
-    test_saliency_to_matrix()
-
-    # run tests for the Glyph class
-    test_Glyph()
-
-    # test_demo()
-    test_logomaker_get_data_methods()
 
     # # Trigger artificial failture for Python 3.8, just for testing purposes.
     # if sys.version_info.major == 3 and sys.version_info.minor < 9:
