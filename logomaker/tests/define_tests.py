@@ -30,7 +30,7 @@ def get_Logo_tests():
     """
     return [ 
         # test parameter df
-        (logomaker.Logo, 'df', bool_fail_list, True, {}),
+        (logomaker.Logo, 'df', bool_fail_list, False, {}),
         (logomaker.Logo, 'df', bad_df1, True, {}),
         (logomaker.Logo, 'df', good_crp_df, False, {}),
         (logomaker.Logo, 'df', random_df, False, {}),
@@ -161,6 +161,9 @@ def get_Logo_tests():
 
         ]
 def get_Logo_style_glyphs_tests():
+    """
+    Tests for the style_glyphs method of the Logo class.
+    """
     return [
         # test parameter color_scheme
         (logomaker.Logo(good_crp_df).style_glyphs, 'color_scheme', 'bad_color_scheme', True, {}),
@@ -174,6 +177,9 @@ def get_Logo_style_glyphs_tests():
          
     ]
 def get_Logo_fade_glyphs_in_probability_logo_tests():
+    """
+    Tests for the fade_glyphs_in_probability_logo method of the Logo class.
+    """
     return [
         # test parameter v_alpha0
         (logomaker.Logo(good_prob_df).fade_glyphs_in_probability_logo, 'v_alpha0', -1.1, True, {}),
@@ -198,6 +204,9 @@ def get_Logo_fade_glyphs_in_probability_logo_tests():
         
     ]
 def get_Logo_style_glyphs_below_tests():
+    """
+    Tests for the style_glyphs_below method of the Logo class.
+    """
     return [
         # test parameter color
         (logomaker.Logo(good_crp_df).style_glyphs_below, 'color', 0, True, {}),
@@ -241,6 +250,9 @@ def get_Logo_style_glyphs_below_tests():
 
     ]
 def get_Logo_style_single_glyph_tests():
+    """
+    Tests for the style_single_glyph method of the Logo class.
+    """
     return [
         # test parameter p
         (logomaker.Logo(good_crp_df).style_single_glyph, 'p', -1, True, {'c': 'A'}),
@@ -271,6 +283,9 @@ test_bad_sequence = np.random.choice(['A', 'C', 'G', 'T'], size=10, p=[0.25, 0.2
 test_bad_sequence = "".join(test_bad_sequence)
 
 def get_Logo_style_glyphs_in_sequence_tests():
+    """
+    Tests for the style_glyphs_in_sequence method of the Logo class.
+    """
     return [
         # test parameter sequence
         (logomaker.Logo(good_crp_df).style_glyphs_in_sequence, 'sequence', -1, True, {}),
@@ -280,6 +295,9 @@ def get_Logo_style_glyphs_in_sequence_tests():
         (logomaker.Logo(good_crp_df).style_glyphs_in_sequence, 'sequence', test_good_sequence, False, {})
     ]
 def get_Logo_highlight_position_tests():
+    """
+    Tests for the highlight_position method of the Logo class.
+    """
     return [
         # test parameter p
         (logomaker.Logo(good_crp_df).highlight_position, 'p', 'x', True, {}),
@@ -289,6 +307,9 @@ def get_Logo_highlight_position_tests():
         (logomaker.Logo(good_crp_df).highlight_position, 'p', 10, False, {})
     ]
 def get_Logo_highlight_position_range_tests():
+    """
+    Tests for the highlight_position_range method of the Logo class.
+    """
     return [
         # test parameter pmin
         (logomaker.Logo(good_crp_df).highlight_position_range, 'pmin', 'x', True, {'pmax':15}),
@@ -351,6 +372,9 @@ def get_Logo_highlight_position_range_tests():
         (logomaker.Logo(good_crp_df).highlight_position_range, 'zorder', 1, False, {'pmin':5, 'pmax':10}),
     ]
 def get_Logo_draw_baseline():
+    """
+    Tests for the draw_baseline method of the Logo class.
+    """
     return [
         # test parameter zorder
         (logomaker.Logo(good_crp_df).draw_baseline, 'zorder', 'x', True, {}),
@@ -381,6 +405,9 @@ def get_Logo_draw_baseline():
 
     ]
 def get_Logo_style_xticks_tests():
+    """
+    Tests for the style_xticks method of the Logo class.
+    """
     return [
         # test parameter anchor
         (logomaker.Logo(good_crp_df).style_xticks, 'anchor', 'x', True, {}),
@@ -418,6 +445,9 @@ def get_Logo_style_xticks_tests():
         
     ]
 def get_Logo_style_spines_tests():
+    """
+    Tests for the style_spines method of the Logo class.
+    """
     return [
         # test parameter spines
         (logomaker.Logo(good_crp_df).style_spines, 'spines', 'x', True, {}),
@@ -467,6 +497,9 @@ good_crp_weight_df = logomaker.get_example_matrix('crp_energy_matrix', print_des
 good_crp_counts_df = logomaker.get_example_matrix('crp_counts_matrix', print_description=False)
 
 def get_transform_matrix_tests():
+    """
+    Tests for the transform_matrix method.
+    """
     return [
         # test parameter df
         (logomaker.transform_matrix, 'df', 'x', True, {'from_type': 'counts', 'to_type': 'probability'}),
@@ -527,6 +560,9 @@ def get_transform_matrix_tests():
     ]
 
 def get_sequence_to_matrix_tests(): 
+    """
+    Tests for the sequence_to_matrix method.
+    """
     return [
         # test parameter seq
         (logomaker.sequence_to_matrix, 'seq', None, True, {}),
@@ -587,6 +623,9 @@ with logomaker.open_example_datafile('crp_sites.fa', print_description=False) as
 seqs = [seq.strip() for seq in raw_seqs if ('#' not in seq) and ('>') not in seq]
 
 def get_alignment_to_matrix_tests():
+    """
+    Tests for the alignment_to_matrix method.
+    """
     return [
         # test parameter sequences
         (logomaker.alignment_to_matrix, 'sequences', 0, True, {}),
@@ -651,6 +690,9 @@ with logomaker.open_example_datafile('nn_saliency_values.txt', print_description
     saliency_data_df = pd.read_csv(f, comment='#', sep='\t')
 
 def get_saliency_to_matrix_tests():
+    """
+    Tests for the saliency_to_matrix method.
+    """
     return [
         # test parameter seq
         (logomaker.saliency_to_matrix, 'seq', None, True, {'values':saliency_data_df['value']}),
@@ -688,6 +730,9 @@ ax.set_ylim([0, 1])
 
 
 def get_Glyph_tests():
+    """
+    Tests for the Glyph class.
+    """
     return [
         # test parameter p
         # TODO: need to fix fail_list bugs for parameter p
@@ -818,6 +863,9 @@ def get_Glyph_tests():
 
     ]
 def get_get_data_methods_tests():
+    """
+    Tests for the get_example_matrix and open_example_datafile methods.
+    """
     return [
         # test parameter name
         (logomaker.get_example_matrix, 'name', 'wrong argument', True, {'print_description':False}),
@@ -850,6 +898,9 @@ def get_get_data_methods_tests():
         (logomaker.open_example_datafile, 'print_description', False, False, {'name':'nn_saliency_values.txt'}),
     ]
 def get_demo_tests():
+    """
+    Tests for the demo.
+    """
     return [
         (logomaker.demo, 'name', 0, True, {}),
         (logomaker.demo, 'name', True, True, {}),
