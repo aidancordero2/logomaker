@@ -30,7 +30,11 @@ def get_Logo_tests():
     """
     return [ 
         # test parameter df
-        (logomaker.Logo, 'df', bool_fail_list, False, {}),
+        (logomaker.Logo, 'df', 0, True, {}),
+        (logomaker.Logo, 'df', -1, True, {}),
+        (logomaker.Logo, 'df', 'True', True, {}),
+        (logomaker.Logo, 'df', 'x', True, {}),
+        (logomaker.Logo, 'df', 1, True, {}),
         (logomaker.Logo, 'df', bad_df1, True, {}),
         (logomaker.Logo, 'df', good_crp_df, False, {}),
         (logomaker.Logo, 'df', random_df, False, {}),
