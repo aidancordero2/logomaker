@@ -114,12 +114,8 @@ def test_parameter_values(func,
         kwargs[var_name] = val
         test_for_mistake(func=func, should_fail=should_fail, **kwargs)
 
-        print("Tests passed: %d. Tests failed: %d.\n" %
-              (global_success_counter, global_fail_counter))
-
     # Otherwise, make sure function without parameters succeeds
     else:
-
         # User feedback
         print("Testing %s() without parameters." % func.__name__)
 
