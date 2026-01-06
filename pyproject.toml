@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "logomaker"
-version = "0.8.7"
+name = "logomaker_acordero"
+version = "0.10.2"
 description = "Package for making Sequence Logos"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -25,8 +25,8 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "http://logomaker.readthedocs.io"
-Repository = "https://github.com/jbkinney/logomaker"
+Documentation = "https://logomaker-acordero.readthedocs.io"
+Repository = "https://github.com/aidancordero2/logomaker"
 
 [tool.hatch.build]
 include = [
@@ -46,4 +46,11 @@ include = [
     "/logomaker",
     "LICENSE",
     "README.md"
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "logomaker/tests"
 ]
