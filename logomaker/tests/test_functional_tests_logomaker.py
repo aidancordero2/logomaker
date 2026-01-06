@@ -5,7 +5,7 @@ import logomaker
 from logomaker.src.error_handling import LogomakerError
 import pytest
 import types
-from ..tests.define_tests import (
+from .define_tests import (
     get_Logo_tests, get_Logo_style_glyphs_tests, get_Logo_fade_glyphs_in_probability_logo_tests, get_Logo_style_glyphs_below_tests, 
     get_Logo_style_single_glyph_tests, get_Logo_style_glyphs_in_sequence_tests, get_Logo_highlight_position_tests, get_Logo_highlight_position_range_tests,
     get_Logo_draw_baseline, get_Logo_style_xticks_tests, get_Logo_style_spines_tests, get_sequence_to_matrix_tests, get_alignment_to_matrix_tests, 
@@ -13,7 +13,7 @@ from ..tests.define_tests import (
     bool_fail_list, bool_success_list, good_crp_df, good_prob_df, random_df, color_dict_warning_df, bad_df1
 )
 
-
+# fixture for default Logo test kwargs
 @pytest.fixture
 def default_Logo_kwargs():
     return {'df': good_crp_df}
